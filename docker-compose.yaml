@@ -1,0 +1,50 @@
+version: '3.8'
+
+volumes:
+  postgres:
+  pgadmin:
+
+services:
+  gokart-service:
+    image: ajres/gokart-service:latest
+    container_name: gokart-service
+    depends_on:
+      - postgres
+    ports:
+      - "15431:8080"
+    volumes:
+      - ./properties/application-docker.yaml:/app/config/application-docker.yaml
+    environment:
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
+      - SPRING_CONFIG_NAME=application-docker
+  postgres:
+    container_name: postgres
+    image: "postgres:15"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/data/postgres"
+    volumes:
+      - postgres:/data/postgres
+      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+    ports:
+      - "15432:5432"
+    restart: unless-stopped
+  pgadmin:
+    container_name: pgadmin
+    image: "dpage/pgadmin4:8.3"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+      - ./docker_pgadmin_servers.json:/pgadmin4/servers.json
+    ports:
+      - "15433:80"
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - "/bin/echo 'postgres:5432:*:postgres:postgres' > /tmp/pgpassfile && chmod 600 /tmp/pgpassfile && /entrypoint.sh"
+    restart: unless-stopped

@@ -5,18 +5,23 @@ volumes:
   pgadmin:
 
 services:
+  gokart-web:
+    image: ajres/gokart-web:latest
+    container_name: gokart-web
+    ports:
+      - "15430:80"
   gokart-service:
     image: ajres/gokart-service:latest
     container_name: gokart-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/gokart
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - postgres
     ports:
       - "15431:8080"
-    volumes:
-      - ./properties/application-docker.yaml:/app/config/application-docker.yaml
-    environment:
-      - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
-      - SPRING_CONFIG_NAME=application-docker
   postgres:
     container_name: postgres
     image: "postgres:15"
